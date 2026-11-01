@@ -1,4 +1,6 @@
 import './App.css'
+import StatCard from './components/StatCard'
+import RecentOrders from './components/RecentOrders'
 
 function App(){
 
@@ -19,26 +21,13 @@ function App(){
         </section>
 
         <section className='stats'> 
-          <div className='stat-card'>
-          <h3>Total Orders</h3>
-          <p>0</p>
-
-          <div className='stat-card'>
-            <h3>Pending Orders</h3>
-            <p>0</p>
-          </div>
-          <div>
-            <h3>Completed Orders</h3>
-            <p>0</p>
-          </div>
-          </div>
-
-          <section className='orders'>
-            <h2>Recent Orders</h2>
-            <p>No orders available yet</p>
-
-          </section>
+          <StatCard title="Total Orders" value={0}/>
+          <StatCard title="Pending Orders" value={0}/>
+          <StatCard title="Completed Orders" value={0}/>
+          <StatCard title="Cancelled Orders" value={0}/>
         </section>
+
+        <RecentOrders/>
       </main>
 
 
