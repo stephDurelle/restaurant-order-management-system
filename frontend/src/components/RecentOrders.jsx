@@ -1,9 +1,9 @@
  import { useState } from "react"
  
       
-function RecentOrders(){
+function RecentOrders({orders, setOrders}){
 
-    const [orders, setOrders]= useState ( [{
+    /*const [orders, setOrders]= useState ( [{
             id:1,
             customer:'Sarah',
             items: 2,
@@ -30,14 +30,15 @@ function RecentOrders(){
     total: 56.00,
     status: 'Cancelled'
   
-        }])
+        }])*/
+
         const [customer, setCustomer]= useState('')
         const [items, setItems]= useState(1)
         const[total,setTotal]= useState('')
         //fonction pour ajouter une commande
         function handleSubmit(event) {
             event.preventDefault()
-            if(customer.trim() ==='' || Number(items)< 1|| total ===''|| Number(total)<0){
+            if(customer.trim() ==='' || !Number.isInteger(Number(items))|| Number(items)< 1|| total ===''|| !Number.isFinite(Number(total))|| Number(total)<0){
                 alert("please enter valid order information")
                 return
             }
@@ -73,6 +74,7 @@ function RecentOrders(){
         <label>Number of Items</label>
         <input type="number"
         min={1}
+        step={1}
         value={items}
         onChange={(event)=> setItems(event.target.value   )} />
         <label>Order Total ($)</label>

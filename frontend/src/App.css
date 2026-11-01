@@ -34,11 +34,33 @@ color: #172C43;
   background-color: white;
   padding: 25px;
   border-radius: 12px;
+  border-left: 5px solid #7895B2;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+.stat-card h3{
+  font-size: 15px;
+  color: #64748b;
+  margin-bottom: 12px;
 }
 .stat-card p{
   font-size: 28px;
   font-weight: bold;
+  margin: 0;
 } 
+/* Individual card colors*/
+.stat-card.total{
+  border-left-color: #7895B2;
+}
+.stat-card.pending{
+  border-left-color: #E9A23B;
+}
+.stat-card.completed{
+  border-left-color: #36A477;
+}
+.stat-card.cancelled{
+  border-left-color: #D96C6C;
+}
 
 /*Recent orders */
 .orders{
