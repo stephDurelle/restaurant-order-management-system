@@ -1,8 +1,9 @@
 import './App.css'
 import StatCard from './components/StatCard'
 import RecentOrders from './components/RecentOrders'
-
+import { useState } from 'react'
 function App(){
+  // JE ME SUIS ARRETER ICI
 
   return(
     //className me permet ici d'attribuer une classe CSS à un élément HTML

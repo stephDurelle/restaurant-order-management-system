@@ -64,3 +64,15 @@ color: #172C43;
 .orders tr:hover{
   background-color: #f9faf9;
 }
+.orders select{
+  padding: 8px 12px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background-color: #172C43;
+  font-size: 14px;
+  cursor: pointer;
+}
+.orders select:focus{
+  outline: 2px solid #7895B2;
+  border-color: #7895B2;
+}
