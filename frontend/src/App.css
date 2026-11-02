@@ -26,7 +26,7 @@ color: #172C43;
 /* Statistics cards*/
 .stats{
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
   margin-bottom: 30px;
 }
@@ -97,4 +97,40 @@ color: #172C43;
 .orders select:focus{
   outline: 2px solid #7895B2;
   border-color: #7895B2;
+}
+/*ecran de tablette*/
+@media(max-width:1024px) {
+  .stats{grid-template-columns: repeat(2, 1fr);}
+  
+}
+/*mobile screens*/
+@media(max-width: 600px){
+  .header{padding: 20px;}
+  .dashboard{padding: 20px;}
+  .stats{grid-template-columns: 1fr;
+  gap: 15px;}
+  .stat-card{padding: 20px;}
+  .orders{padding: 15px;}
+  .oders table{min-width: 600px;}
+}
+.order-filters{
+  display: flex;
+  gap: 15px;
+  margin: 20px 0;
+}
+.order-filters input,
+.order-filters select {
+  padding: 10px;
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.order-filters input {
+  flex: 1;
+}
+@media (max-width: 600px) {
+  .order-filters {
+    flex-direction: column;
+  }
 }
