@@ -13,6 +13,11 @@ function RecentOrders({orders, setOrders}){
         //rechercher et filtrer les commandes
         const [searchTerm, setSearchTerm] = useState('')
         const[statusFilter, setStatusFilter]= useState('All')
+        //
+        const[currentPage, setCurrentPage] =  useState(1)
+        const ordersPerPage=5
+        // Ajout d'un Etat
+        const[selectedOrder, setSelectedOrder]= useState(null)
 
         //fonction pour ajouter une commande
         function handleSubmit(event) {
@@ -41,7 +46,8 @@ function RecentOrders({orders, setOrders}){
              customer: customer.trim(),
             items: Number(items),
             total: Number(total),
-            status: 'Pending'
+            status: 'Pending',
+            createdAt: new Date().toISOString()
             }
             setOrders(currentOrders=> [...currentOrders,newOrder])
             // je reinitialise le formulaire
@@ -68,6 +74,14 @@ function RecentOrders({orders, setOrders}){
           const matchesStatus= statusFilter === 'All' || order.status === statusFilter
           return matchesSearch && matchesStatus
         })
+        //calculer les commandes afficher
+        const indexOfLastOrder= currentPage*ordersPerPage
+        const indexOffFirstOrder= indexOfLastOrder- ordersPerPage
+
+        const currentOrders= filteredOrders.slice(
+          indexOffFirstOrder, indexOfLastOrder
+        )
+        const totalPages= Math.ceil(filteredOrders.length/ ordersPerPage)
 
     return(
         <section className="orders">
@@ -155,18 +169,21 @@ function RecentOrders({orders, setOrders}){
             <th>Customer</th>
             <th>Items</th>
             <th>Total</th>
+            <th>Date Created</th>
             <th>Status</th>
             <th>Actions</th>
+            
           </tr>
         </thead>
         
          <tbody>
-          {filteredOrders.map((order) => (
+          {currentOrders.map((order) => (
             <tr key={order.id}>
               <td>#{order.id}</td>
               <td>{order.customer}</td>
               <td>{order.items}</td>
               <td>{order.total.toFixed(2)}$</td>
+              <td>{new Date(order.createdAt).toLocaleString()}</td>
               <td>
                 <select value={order.status} 
                 onChange={(event)=> handleStatusChange(order.id, event.target.value)}>
@@ -178,6 +195,11 @@ function RecentOrders({orders, setOrders}){
                 </select>
               </td>
               <td>
+                <button type="button"
+                onClick={()=> setSelectedOrder(order)}>
+                  View
+
+                </button>
                 <button type="button" onClick={()=> handleDeleteOrder (order.id)}>
                     Delete 
                 </button>
@@ -192,6 +214,43 @@ function RecentOrders({orders, setOrders}){
           )}
         </tbody>
       </table>
+      {/** La fenetre de detail */}
+      {selectedOrder &&(
+        <div className="order-details">
+          <h3>Order Details</h3>
+          <p><strong>Order ID </strong>#{selectedOrder.id}</p>
+          <p><strong>Custumer </strong>{selectedOrder.customer}</p>
+          <p><strong>Items </strong>{selectedOrder.items}</p>
+          <p><strong>Total </strong>{selectedOrder.total}</p>
+          <p><strong>Date Created</strong>{' '}{new Date(selectedOrder.createdAt).toLocaleString()}</p>
+          <p><strong>Status </strong>{selectedOrder.status}</p>
+         
+
+          <button type="button"
+          onClick={()=> setSelectedOrder(null)}>
+            Close
+          </button>
+
+        </div>
+      )}
+
+
+      <div className="pagination">
+        <button type="button"
+        disabled={currentPage===1}
+        onClick={()=> setCurrentPage(currentPage-1)}>
+          Previous
+        </button>
+        <span>
+          Page {currentPage} of {Math.max(totalPages,1)}
+        </span>
+        <button type="button"
+        disabled={currentPage>= totalPages}
+        onClick={()=>setCurrentPage(currentPage+1)}>
+          Next
+        </button>
+
+      </div>
     </section>
     )
 }

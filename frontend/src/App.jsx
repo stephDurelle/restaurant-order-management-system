@@ -5,10 +5,10 @@ import { useState } from 'react'
 function App(){
   // 
   const[orders,setOrders]= useState([
-    {id:1, customer: 'Sarah', items:2, total: 25.00, status:'Pending'},
-    {id:2, customer: 'Michael', items:3, total: 42.50, status:'Preparing'},
-    {id:3, customer: 'Jessica', items:1, total: 18.00, status:'Completed'},
-    {id:4, customer: 'David', items:4, total: 56.00, status:'Cancelled'}
+    {id:1, customer: 'Sarah', items:2, total: 25.00, status:'Pending', createdAt: '2026-11-02T09:30:09'},
+    {id:2, customer: 'Michael', items:3, total: 42.50, status:'Preparing', createdAt: '2026-11-02T09:31:00'},
+    {id:3, customer: 'Jessica', items:1, total: 18.00, status:'Completed', createdAt: '2026-11-01T19:30:49'},
+    {id:4, customer: 'David', items:4, total: 56.00, status:'Cancelled', createdAt: '2026-10-31T20:00:09'}
   ])
   const totalOrders =orders.length
   const pendingOrders= orders.filter(order => order.status ==='Pending').length
