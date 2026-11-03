@@ -179,3 +179,10 @@ color: #172C43;
   border-radius: 6px;
   cursor: pointer;
 }
+.stat-card.revenue {
+  border-left-color: #36A477;
+}
+
+.stat-card.average {
+  border-left-color: #7895B2;
+}

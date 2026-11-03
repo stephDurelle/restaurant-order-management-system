@@ -1,167 +1,266 @@
-import { useState } from "react"
- 
-      
-function RecentOrders({orders, setOrders}){
 
-        const [customer, setCustomer]= useState('')
-        const [items, setItems]= useState(1)
-        const[total,setTotal]= useState('')
+import { useState } from "react";
+import {
+  createOrder,
+  updateOrderStatus,
+  deleteOrder
+} from "../services/orderService";
 
-        const[errors,setErrors]= useState({})
-        const[successMessage, setSuccessMessage]=useState('')
+function RecentOrders({ orders, setOrders }) {
+  const [customer, setCustomer] = useState("");
+  const [items, setItems] = useState(1);
+  const [total, setTotal] = useState("");
 
-        //rechercher et filtrer les commandes
-        const [searchTerm, setSearchTerm] = useState('')
-        const[statusFilter, setStatusFilter]= useState('All')
-        //
-        const[currentPage, setCurrentPage] =  useState(1)
-        const ordersPerPage=5
-        // Ajout d'un Etat
-        const[selectedOrder, setSelectedOrder]= useState(null)
+  const [errors, setErrors] = useState({});
+  const [successMessage, setSuccessMessage] = useState("");
+  const [apiError, setApiError] = useState("");
 
-        //fonction pour ajouter une commande
-        function handleSubmit(event) {
-            event.preventDefault()
-            const newErrors={}
-            //Validation du nom du client
-            if (customer.trim()=== ''){
-              newErrors.customer= 'Customer name is required'
-            }
-            //validation du nombre d'articles
-            if(!Number.isInteger(Number(items))|| Number(items)<1){newErrors.items='Enter a valid number of items'}
-            //Validation du montant
-            if(
-              total===''||!Number.isFinite(Number(total)) || Number(total)<0
-            ){ newErrors.total='Enter a valid order total'}
-            setErrors(newErrors)
-            setSuccessMessage('')
-            //s'il existe des erreurs, on arrete la soumission
-            if(Object.keys(newErrors).length>0){
-              return
-            }
-       
-          
-            const newOrder={
-                id:Math.max(0, ...orders.map(order => order.id)) + 1,
-             customer: customer.trim(),
-            items: Number(items),
-            total: Number(total),
-            status: 'Pending',
-            createdAt: new Date().toISOString()
-            }
-            setOrders(currentOrders=> [...currentOrders,newOrder])
-            // je reinitialise le formulaire
-            setCustomer('')
-            setItems(1)
-            setTotal('')
-            setErrors({})
-            //Message de succes
-            setSuccessMessage('Order successfully added!')
-        }
-        //fonction pour modifier le statut de la commande
-        function handleStatusChange(orderId, newStatus){
-            setOrders(currentOrders => currentOrders.map(order=> order.id === orderId ?{ ...order,status: newStatus}: order))
-        }
-        function handleDeleteOrder(orderId){
-          setOrders(currentOrders=> currentOrders.filter(order=> order.id !== orderId ))
-        }
-        //le filtrage
-        const filteredOrders= orders.filter(order=>{
-          const matchesSearch= order.customer
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
-          const matchesStatus= statusFilter === 'All' || order.status === statusFilter
-          return matchesSearch && matchesStatus
-        })
-        //calculer les commandes afficher
-        const indexOfLastOrder= currentPage*ordersPerPage
-        const indexOffFirstOrder= indexOfLastOrder- ordersPerPage
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 5;
 
-        const currentOrders= filteredOrders.slice(
-          indexOffFirstOrder, indexOfLastOrder
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  // CREATE: Ajouter une commande dans PostgreSQL
+  async function handleSubmit(event) {
+    event.preventDefault();
+
+    const newErrors = {};
+
+    if (customer.trim() === "") {
+      newErrors.customer = "Customer name is required";
+    }
+
+    if (!Number.isInteger(Number(items)) || Number(items) < 1) {
+      newErrors.items = "Enter a valid number of items";
+    }
+
+    if (
+      total === "" ||
+      !Number.isFinite(Number(total)) ||
+      Number(total) < 0
+    ) {
+      newErrors.total = "Enter a valid order total";
+    }
+
+    setErrors(newErrors);
+    setSuccessMessage("");
+    setApiError("");
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
+
+    try {
+      const newOrder = {
+        customer: customer.trim(),
+        items: Number(items),
+        total: Number(total)
+      };
+
+      const savedOrder = await createOrder(newOrder);
+
+      setOrders(currentOrders => [...currentOrders, savedOrder]);
+
+      setCustomer("");
+      setItems(1);
+      setTotal("");
+      setErrors({});
+      setCurrentPage(1);
+
+      setSuccessMessage("Order successfully added!");
+    } catch (error) {
+      console.error("Error creating order:", error);
+      setApiError("Unable to create order. Please try again.");
+    }
+  }
+
+  // UPDATE: Modifier le statut dans PostgreSQL
+  async function handleStatusChange(orderId, newStatus) {
+    setApiError("");
+    setSuccessMessage("");
+
+    try {
+      const updatedOrder = await updateOrderStatus(orderId, newStatus);
+
+      setOrders(currentOrders =>
+        currentOrders.map(order =>
+          order.id === orderId ? updatedOrder : order
         )
-        const totalPages= Math.ceil(filteredOrders.length/ ordersPerPage)
+      );
 
-    return(
-        <section className="orders">
+      setSelectedOrder(current =>
+        current?.id === orderId ? updatedOrder : current
+      );
+
+      setSuccessMessage("Order status successfully updated!");
+    } catch (error) {
+      console.error("Error updating order:", error);
+      setApiError("Unable to update order status. Please try again.");
+    }
+  }
+
+  // DELETE: Supprimer une commande de PostgreSQL
+  async function handleDeleteOrder(orderId) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this order?"
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setApiError("");
+    setSuccessMessage("");
+
+    try {
+      await deleteOrder(orderId);
+
+      setOrders(currentOrders =>
+        currentOrders.filter(order => order.id !== orderId)
+      );
+
+      setSelectedOrder(current =>
+        current?.id === orderId ? null : current
+      );
+
+      setSuccessMessage("Order successfully deleted!");
+    } catch (error) {
+      console.error("Error deleting order:", error);
+      setApiError("Unable to delete order. Please try again.");
+    }
+  }
+
+  // SEARCH AND FILTER
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = order.customer
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "All" || order.status === statusFilter;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  // PAGINATION
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const effectivePage = Math.min(currentPage, Math.max(totalPages, 1));
+
+  const indexOfLastOrder = effectivePage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+
+  const currentOrders = filteredOrders.slice(
+    indexOfFirstOrder,
+    indexOfLastOrder
+  );
+
+  return (
+    <section className="orders">
       <h2>Recent Orders</h2>
-{/**noValidate ? */}
+
+      {/* CREATE ORDER FORM */}
       <form onSubmit={handleSubmit} noValidate>
         <label htmlFor="customer">Customer Name</label>
-        <input 
-        id="customer"
-        type="text"
-        placeholder="Enter Customer name"
-        value={customer}
-        required
-        className={errors.customer ? 'input-error' : ''}
-        onChange={(event)=> {setCustomer(event.target.value)
-          setErrors(current=> ({...current,customer: ''}))
-        } }/>
-          {errors.customer&&( 
-            <p className="error-message">{errors.customer}</p>
-          )}
+        <input
+          id="customer"
+          type="text"
+          placeholder="Enter Customer name"
+          value={customer}
+          required
+          className={errors.customer ? "input-error" : ""}
+          onChange={event => {
+            setCustomer(event.target.value);
+            setErrors(current => ({ ...current, customer: "" }));
+          }}
+        />
+        {errors.customer && (
+          <p className="error-message">{errors.customer}</p>
+        )}
 
         <label htmlFor="items">Number of Items</label>
-        <input 
-        id="items"
-        type="number"
-        min={1}
-        step={1}
-        value={items}
-        required
-        className={errors.items ? 'input-error': ''}
-
-        onChange={(event)=> {setItems(event.target.value)
-          setErrors(current=>({ ...current, items: ''}))
-        }} />
-        {errors.items&&(
+        <input
+          id="items"
+          type="number"
+          min="1"
+          step="1"
+          value={items}
+          required
+          className={errors.items ? "input-error" : ""}
+          onChange={event => {
+            setItems(event.target.value);
+            setErrors(current => ({ ...current, items: "" }));
+          }}
+        />
+        {errors.items && (
           <p className="error-message">{errors.items}</p>
         )}
 
         <label htmlFor="total">Order Total ($)</label>
         <input
-        id="total"
-        type="number"
-        min="0"
-        step="0.01"
-        placeholder="Enter order total"
-        value={total}
-        required
-        className={errors.total ? 'input-error': ''}
-        onChange={(event) => {setTotal(event.target.value)
-          setErrors(current=> ({ ...current, total: ''}))
-        }}
-/>
-{errors.total &&(
-  <p className="error-message" > {errors.total}</p>
-)}
+          id="total"
+          type="number"
+          min="0"
+          step="0.01"
+          placeholder="Enter order total"
+          value={total}
+          required
+          className={errors.total ? "input-error" : ""}
+          onChange={event => {
+            setTotal(event.target.value);
+            setErrors(current => ({ ...current, total: "" }));
+          }}
+        />
+        {errors.total && (
+          <p className="error-message">{errors.total}</p>
+        )}
+
         <button type="submit">Add Order</button>
-        {
-          successMessage && (
-            <p className="success-message" role="status"> {successMessage}</p>
-          )
-        }
+
+        {successMessage && (
+          <p className="success-message" role="status">
+            {successMessage}
+          </p>
+        )}
+
+        {apiError && (
+          <p className="error-message" role="alert">
+            {apiError}
+          </p>
+        )}
       </form>
-       {/**Champ de recherche */}
-        <div className="order-filters">
-          <input type="text"
+
+      {/* SEARCH AND FILTER */}
+      <div className="order-filters">
+        <input
+          type="text"
           placeholder="Search by customer name..."
           value={searchTerm}
-          onChange={(event)=> setSearchTerm(event.target.value)} />
-          <select value={statusFilter} onChange={(event)=> setStatusFilter(event.target.value)}>
-            <option value="All">All Orders</option>
-            <option value="Pending">Pending</option>
-            <option value="Preparing">Preparing</option>
-            <option value="Ready">Ready</option>
-            <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
+          onChange={event => {
+            setSearchTerm(event.target.value);
+            setCurrentPage(1);
+          }}
+        />
 
+        <select
+          value={statusFilter}
+          onChange={event => {
+            setStatusFilter(event.target.value);
+            setCurrentPage(1);
+          }}
+        >
+          <option value="All">All Orders</option>
+          <option value="Pending">Pending</option>
+          <option value="Preparing">Preparing</option>
+          <option value="Ready">Ready</option>
+          <option value="Completed">Completed</option>
+          <option value="Cancelled">Cancelled</option>
+        </select>
+      </div>
 
-          </select>
-        </div>
-
+      {/* ORDERS TABLE */}
       <table>
         <thead>
           <tr>
@@ -172,87 +271,116 @@ function RecentOrders({orders, setOrders}){
             <th>Date Created</th>
             <th>Status</th>
             <th>Actions</th>
-            
           </tr>
         </thead>
-        
-         <tbody>
-          {currentOrders.map((order) => (
+
+        <tbody>
+          {currentOrders.map(order => (
             <tr key={order.id}>
               <td>#{order.id}</td>
               <td>{order.customer}</td>
               <td>{order.items}</td>
-              <td>{order.total.toFixed(2)}$</td>
-              <td>{new Date(order.createdAt).toLocaleString()}</td>
+              <td>{Number(order.total).toFixed(2)}$</td>
               <td>
-                <select value={order.status} 
-                onChange={(event)=> handleStatusChange(order.id, event.target.value)}>
-                    <option value="Pending">Pending</option>
-                    <option value="Preparing">Preparing</option>
-                    <option value="Ready">Ready</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
+                {order.createdAt
+                  ? new Date(order.createdAt).toLocaleString()
+                  : "N/A"}
+              </td>
+
+              <td>
+                <select
+                  value={order.status}
+                  onChange={event =>
+                    handleStatusChange(order.id, event.target.value)
+                  }
+                >
+                  <option value="Pending">Pending</option>
+                  <option value="Preparing">Preparing</option>
+                  <option value="Ready">Ready</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
                 </select>
               </td>
-              <td>
-                <button type="button"
-                onClick={()=> setSelectedOrder(order)}>
-                  View
 
+              <td>
+                <button
+                  type="button"
+                  onClick={() => setSelectedOrder(order)}
+                >
+                  View
                 </button>
-                <button type="button" onClick={()=> handleDeleteOrder (order.id)}>
-                    Delete 
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteOrder(order.id)}
+                >
+                  Delete
                 </button>
               </td>
             </tr>
-          )
-          )}
-           {filteredOrders.length === 0 && (
+          ))}
+
+          {filteredOrders.length === 0 && (
             <tr>
-              <td colSpan="6"> No orders found</td>
+              <td colSpan="7">No orders found</td>
             </tr>
           )}
         </tbody>
       </table>
-      {/** La fenetre de detail */}
-      {selectedOrder &&(
+
+      {/* ORDER DETAILS */}
+      {selectedOrder && (
         <div className="order-details">
           <h3>Order Details</h3>
-          <p><strong>Order ID </strong>#{selectedOrder.id}</p>
-          <p><strong>Custumer </strong>{selectedOrder.customer}</p>
-          <p><strong>Items </strong>{selectedOrder.items}</p>
-          <p><strong>Total </strong>{selectedOrder.total}</p>
-          <p><strong>Date Created</strong>{' '}{new Date(selectedOrder.createdAt).toLocaleString()}</p>
-          <p><strong>Status </strong>{selectedOrder.status}</p>
-         
 
-          <button type="button"
-          onClick={()=> setSelectedOrder(null)}>
+          <p><strong>Order ID:</strong> #{selectedOrder.id}</p>
+          <p><strong>Customer:</strong> {selectedOrder.customer}</p>
+          <p><strong>Items:</strong> {selectedOrder.items}</p>
+          <p>
+            <strong>Total:</strong>{" "}
+            {Number(selectedOrder.total).toFixed(2)}$
+          </p>
+          <p>
+            <strong>Date Created:</strong>{" "}
+            {selectedOrder.createdAt
+              ? new Date(selectedOrder.createdAt).toLocaleString()
+              : "N/A"}
+          </p>
+          <p><strong>Status:</strong> {selectedOrder.status}</p>
+
+          <button
+            type="button"
+            onClick={() => setSelectedOrder(null)}
+          >
             Close
           </button>
-
         </div>
       )}
 
-
+      {/* PAGINATION */}
       <div className="pagination">
-        <button type="button"
-        disabled={currentPage===1}
-        onClick={()=> setCurrentPage(currentPage-1)}>
+        <button
+          type="button"
+          disabled={effectivePage === 1}
+          onClick={() => setCurrentPage(effectivePage - 1)}
+        >
           Previous
         </button>
+
         <span>
-          Page {currentPage} of {Math.max(totalPages,1)}
+          Page {effectivePage} of {Math.max(totalPages, 1)}
         </span>
-        <button type="button"
-        disabled={currentPage>= totalPages}
-        onClick={()=>setCurrentPage(currentPage+1)}>
+
+        <button
+          type="button"
+          disabled={effectivePage >= totalPages}
+          onClick={() => setCurrentPage(effectivePage + 1)}
+        >
           Next
         </button>
-
       </div>
     </section>
-    )
+  );
 }
-export default RecentOrders 
- 
+
+export default RecentOrders;
