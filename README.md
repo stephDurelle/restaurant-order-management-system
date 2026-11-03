@@ -12,6 +12,36 @@ A full-stack web application for managing restaurant orders. This project allows
 - **Data Validation:** Validate order information on the backend.
 - **Error Handling:** Handle API errors and invalid requests.
 - **Database Integration:** Persist order data using PostgreSQL.
+## Screenshots
+
+### 1. Dashboard
+
+The dashboard provides an overview of restaurant activity, including total orders, pending orders, completed orders, cancelled orders, total revenue, and average order value.
+
+![Restaurant dashboard](docs/images/dashboard.png)
+
+### 2. Recent Orders
+
+The orders table displays customer information, order totals, creation dates, and current order statuses. Users can search, filter, view, update, and delete orders.
+
+![Recent orders table](docs/images/recent-orders.png)
+
+### 3. Add a New Order
+
+Users can create a new order by entering the customer's name, the number of items, and the order total.
+
+![Add a new order](docs/images/add-order.png)
+
+### 4. Order Details
+
+Users can view the details of an individual order directly from the dashboard.
+
+![Order details](docs/images/order-details.png)
+### 3. Search Orders
+
+Users can quickly find specific orders by searching for a customer's name. This makes it easier to locate and manage orders.
+
+![Search orders](docs/images/search-orders.png)
 
 ## Technologies Used
 
